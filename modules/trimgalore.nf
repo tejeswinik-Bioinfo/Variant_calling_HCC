@@ -1,14 +1,15 @@
 #!/usr/bin/env nextflow
 
 process trimgalore_trim_reads{
-    publishDir "${params.trimmed_fastq}/trimmed_fastq", mode: "copy"
+    
+    publishDir "${params.outdir}/trimmed_reads", mode: "copy"
     conda "bioconda::trim-galore=0.6.11"
 
     input:
     tuple val(metadata), path (r1), path (r2)
     output:
-    tuple val(metadata), path ("*trimmed_R1.fastq.gz"), path ("*trimmed_R2.fastq.gz"), emit: "trimmed_fastq"
-    path ("*.html"), emit: "trimmed_reports"
+    tuple val(metadata), path ("*_val_1.fq.gz"), path ("*_val_2.fq.gz"), emit: "trimmed_fastq"
+    path ("*"), emit: "trimmed_reports"
 
     script:
     sample_id = metadata.sampleName
@@ -18,6 +19,7 @@ process trimgalore_trim_reads{
     --quality 30 \
     --length 25 \
     --cores ${params.threads} \
+    --gzip \
     "${r1}" "${r2}"
     """
 }

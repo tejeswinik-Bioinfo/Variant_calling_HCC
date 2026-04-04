@@ -2,7 +2,7 @@
 
 process bwa_index{
 
-    publishDir "${params.ref_parent}", mode: "copy"
+    storeDir "${params.ref_parent}"
     conda "bioconda::bwa=0.7.19"
 
     input:
@@ -22,21 +22,21 @@ process bwa_index{
 process bwa_align_reads{
 
     publishDir "${params.outdir}/aligned_reads", mode: "copy"
-    conda "bioconda::bwa=0.7.19"
+    conda "bioconda::bwa=0.7.19 bioconda::samtools=1.23.1"
 
     input:
     tuple val(metadata), path (r1), path (r2)
     output:
-    tuple val(metadata), path ("*_aligned_reads.bam")
+    tuple val(metadata), path ("*_aligned_reads*")
 
     script:
     sample_id = metadata.sampleName
     """
     bwa mem \
     -t ${params.threads} \
-    -R "@RG\\tID:${sample_id}\tPL:ILUMINA\\tSM:${sample_id}" \
-    ${params.ref}
-    ${r1}
-    ${r2} > ${sample_id}_aligned_reads.bam
+    -R "@RG\\tID:${sample_id}\\tPL:ILUMINA\\tSM:${sample_id}" \
+    ${params.ref} \
+    ${r1} \
+    ${r2} | samtools view -bS - > ${sample_id}_aligned_reads.bam
     """    
 }
