@@ -1,22 +1,41 @@
-Introduction
-Description
-This workflow focuses on Germline short variant discovery. It uses paired-end FASTQ files as input. It consists of pipelines from GATK best practices data pre-processing and Germline short variant discovery. 
-Execution Modes:
-Single sample
-Multi-sample (cohort)
+# Germline Variant Calling Workflow
 
-Workflow Architecture
-2.1 Pipeline Steps
-Quality Control (FastQC)
-Trimming (if applicable)
-Alignment (BWA-MEM)
-Sorting & MarkDuplicates
-Base Quality Score Recalibration (BQSR)
-Variant Calling (HaplotypeCaller)
-Joint Genotyping (for multi-sample)
-Variant Filtering
-Annotation
-Directory Structure
+## 1. Introduction
+
+### Description
+This workflow focuses on **germline short variant discovery** using **paired-end FASTQ files** as input.  
+It implements pipelines based on **GATK Best Practices**, including:
+
+- Data preprocessing  
+- Germline variant discovery  
+
+---
+
+## 2. Execution Modes
+
+- **Single Sample**
+- **Multi-Sample (Cohort)**
+
+---
+
+## 3. Workflow Architecture
+
+### 3.1 Pipeline Steps
+
+1. Quality Control (**FastQC**)  
+2. Trimming (if applicable)  
+3. Alignment (**BWA-MEM**)  
+4. Sorting & MarkDuplicates  
+5. Base Quality Score Recalibration (**BQSR**)  
+6. Variant Calling (**HaplotypeCaller**)  
+7. Joint Genotyping (for multi-sample)  
+8. Variant Filtering  
+9. Annotation  
+
+---
+
+## 4. Directory Structure
+```text
 ├── main.nf
 ├── modules
 │   ├── bwa.nf
@@ -30,78 +49,97 @@ Directory Structure
 └── scripts
     └── ann_plots.py
 
-Requirements
-Java 17 or later up to 26
-Tools used
-Trimgalore
-BWA
-GATK
-SnpEff
-MultiQC
-Input Requirements
-Single sample
-Paired-end FASTQ Format:
+---
+
+## 5. Requirements
+
+- **Java 17 to 26**
+---
+
+### 6. Tools Used
+
+- TrimGalore  
+- BWA  
+- GATK  
+- SnpEff  
+- MultiQC  
+
+---
+
+## 7. Input Requirements
+
+### 7.1 Single Sample
+
+Paired-end FASTQ files:
 sample1_R1.fastq.gz
 sample1_R2.fastq.gz
-Sample Sheet (for multi-sample)
-sample_id
-paired
-file_path_read_1
-file_path_read_2
-S1
-True
-/file/path/S1_R1
-/file/path/S1_R2
-S2
-True
-/file/path/S2_R1
-/file/path/S2_R2
 
 
-Configuration
-7.1 Parameters (params.config)
+---
+
+### 7.2 Multi-Sample (Sample Sheet)
+
+| sample_id | paired | file_path_read_1 | file_path_read_2 |
+|----------|--------|------------------|------------------|
+| S1       | True   | /file/path/S1_R1 | /file/path/S1_R2 |
+| S2       | True   | /file/path/S2_R1 | /file/path/S2_R2 |
+
+---
+
+## 8. Configuration
+
+### 8.1 Parameters (`params.config`)
+
+```groovy
 params {
     outdir = "results/"
     ref = "data/reference/human_genome/genome.fa"
-    ref_parent =  "data/reference/”
+    ref_parent = "data/reference/"
     known_sites = "data/reference/dbsnp.vcf"
     variant_call = "results/variants"
-    cohort = "HCC”
+    cohort = "HCC"
     snpeff_db = "GRCh38.115"
     snpeff_db_dir = "/data/reference/SnpEff"
-    run_type = "single" // or "multi”
+    run_type = "single" // or "multi"
     threads = 8
 }
-7.2 Profiles
+
+### 8.2 Profiles
 profiles {
     conda {
         conda.enabled = true
     }
 }
 
-7. Running the Pipeline
-7.1 Basic Command
-nextflow run Variant_calling_HCC --input raw_data/samplesheet_1.csv -profile conda -resume
-7.2 Germline – Single Sample
+---
+
+## 9. Running the Pipeline
+### 9.1 Basic Command
+nextflow run Variant_calling_HCC \
+  --input raw_data/samplesheet_1.csv \
+  -profile conda \
+  -resume
+
+### 9.2 Germline – Single Sample
 nextflow run main.nf \
   --mode germline \
   --run_type single \
   --input "data/sample/*"
-7.3 Germline – Multi Sample
+### 9.3 Germline – Multi-Sample
 nextflow run main.nf \
   --mode germline \
   --run_type multi \
   --samplesheet samples.csv
 
-8. Output Structure
-├── aligned_reads
-├── annotation
-│   ├── plots
-│   └── stats
-│       └── plots
-├── plots
-├── trimmed_reads
-└── variants
-    └── filtered_variants
+## 10. Output Structure
 
-
+```text
+  results/
+├── aligned_reads/      # BQSR-calibrated BAMs
+├── annotation/         # SnpEff VCFs & Reports
+│   ├── plots/          # Variant distribution plots
+│   └── stats/          # Annotation statistics
+├── plots/              # MultiQC/FastQC reports
+├── trimmed_reads/      # Cleaned FASTQ files
+└── variants/           # Final VCF files
+    └── filtered_variants/
