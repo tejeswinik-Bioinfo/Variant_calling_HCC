@@ -62,12 +62,14 @@ process gatk_GenotypeGVCFs {
     tuple val (cohort_metadata), path ("*.vcf.gz.tbi"), emit: "vcf_index"
 
     script:
+    // Support both single-sample (sampleName) and multi-sample (cohortName) modes
+    output_name = cohort_metadata.cohortName ?: cohort_metadata.sampleName
     
     """
     gatk GenotypeGVCFs \
     -R ${params.ref} \
     -V ${gvcf_file} \
-    -O ${params.cohort}_joint.vcf.gz
+    -O ${output_name}_joint.vcf.gz
 
     """
 }
@@ -85,13 +87,14 @@ process gatk_select_variants_SNPs {
     tuple val (cohort_metadata), path ("*_snp.vcf.gz.tbi"), emit: "snp_vcf_index"
 
     script:
-    cohort_id = cohort_metadata.cohortName
+    // Support both single-sample (sampleName) and multi-sample (cohortName) modes
+    id = cohort_metadata.cohortName ?: cohort_metadata.sampleName
     """
     gatk SelectVariants \
     -R ${params.ref} \
     -V ${jointgvcf_file} \
     --select-type-to-include SNP \
-    -O ${cohort_id}_snp.vcf.gz
+    -O ${id}_snp.vcf.gz
     """
 
 }
@@ -109,13 +112,15 @@ process gatk_select_variants_INDELs {
     tuple val (cohort_metadata), path ("*_indels.vcf.gz.tbi"), emit: "indel_vcf_index"
 
     script:
+    // Support both single-sample (sampleName) and multi-sample (cohortName) modes
+    id = cohort_metadata.cohortName ?: cohort_metadata.sampleName
     
     """
     gatk SelectVariants \
     -R ${params.ref} \
     -V ${jointgvcf_file} \
     --select-type-to-include INDEL \
-    -O ${params.cohort}_indels.vcf.gz
+    -O ${id}_indels.vcf.gz
     """
 
 }
@@ -133,6 +138,8 @@ process gatk_FilterVariants_SNPs {
     tuple val (cohort_metadata), path ("*_filtered_snps.vcf.gz.tbi"), emit: "filtered_snp_index"
 
     script:
+    // Support both single-sample (sampleName) and multi-sample (cohortName) modes
+    id = cohort_metadata.cohortName ?: cohort_metadata.sampleName
     
     """
     gatk VariantFiltration \
@@ -140,7 +147,7 @@ process gatk_FilterVariants_SNPs {
     -V ${jointgvcf_file} \
     --filter-expression "QD < 2.0 || QUAL < 30.0 || SOR > 3.0 || FS > 60.0 || MQ < 40.0 || MQRankSum < -12.5 || ReadPosRankSum < -8.0" \
     -filter-name 'myfilter' \
-    -O ${params.cohort}_filtered_snps.vcf.gz 
+    -O ${id}_filtered_snps.vcf.gz 
     """
 }
 
@@ -156,6 +163,8 @@ process gatk_FilterVariants_INDELs {
     tuple val (cohort_metadata), path("*_filtered_indels.vcf.gz.tbi"), emit: "filtered_indels_index"
 
     script:
+    // Support both single-sample (sampleName) and multi-sample (cohortName) modes
+    id = cohort_metadata.cohortName ?: cohort_metadata.sampleName
 
     """
     gatk VariantFiltration \
@@ -163,7 +172,7 @@ process gatk_FilterVariants_INDELs {
     -V ${indel_vcf_file} \
     --filter-expression "QD < 2.0 || QUAL < 30.0 || FS > 200.0 || ReadPosRankSum < -20.0" \
     -filter-name 'myfilter' \
-    -O ${params.cohort}_filtered_indels.vcf.gz
+    -O ${id}_filtered_indels.vcf.gz
     """
 }
 

@@ -1,20 +1,14 @@
 # Germline Variant Calling Workflow
 
 ## 1. Introduction
-
-### Description
-This workflow focuses on **germline short variant discovery** using **paired-end FASTQ files** as input.  
-It implements pipelines based on **GATK Best Practices**, including:
-
-- Data preprocessing  
-- Germline variant discovery  
+This workflow is a comprehensive pipeline for **Germline short variant discovery** using Whole Exome Sequencing (WES) data. Built with Nextflow, it implements the **GATK Best Practices** for data pre-processing and variant calling, optimized for the **Homo sapiens assembly 38 (GRCh38)**.
 
 ---
 
 ## 2. Execution Modes
 
-- **Single Sample**
-- **Multi-Sample (Cohort)**
+- **Single Sample** - Direct processing of individual FASTQ pairs
+- **Multi-Sample (Cohort)** - Joint genotyping for multi-sample analysis.
 
 ---
 
@@ -52,8 +46,12 @@ It implements pipelines based on **GATK Best Practices**, including:
 
 5. Requirements
 
+  5.1 Softwares
 - **Java 17 to 26**
----
+
+  5.2 Reference files (to be downloaded)
+    1. Homo_sapiens_assembly38.fasta
+    2. Homo_sapiens_assembly38.dbsnp138.vcf.gz
 
 6. Tools Used
 
@@ -123,10 +121,12 @@ nextflow run main.nf \
   --run_type single \
   --input "data/sample/*"
 9.3 Germline – Multi-Sample
-nextflow run main.nf \
-  --mode germline \
-  --run_type multi \
-  --samplesheet samples.csv
+ nextflow run main.nf \
+--input samplesheet.csv \
+--mode multi \
+-profile conda 
+
+Note: Use -resume to continue previous runs
 
 10. Output Structure
 
